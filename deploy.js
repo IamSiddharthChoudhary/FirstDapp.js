@@ -2,13 +2,30 @@ const ethers = require("ethers");
 const fs = require("fs-extra");
 
 async function main() {
-  const provider = new ethers.provider.JsonRpcProvider(
-    "https://127.0.0.1:7545"
+  const provider = new ethers.providers.JsonRpcProvider(
+    "HTTP://172.26.96.1:7545"
   );
-  const wallet = new ethers.wallet(
-    "22634690fbed64ff2ef6c07101d619e8b83c2d1f3b7aaf32f6341d7ff01f1f0b",
+  const wallet = new ethers.Wallet(
+    "13867413d058c1468aee9a3747c3c0a218166d86289bd9e6b2e4e0b3680b90ee",
     provider
   );
+  const abi = fs.readFileSync("./SimpleStorage_sol_SimpleStorage.abi", "utf8");
+  const binary = fs.readFileSync(
+    "./SimpleStorage_sol_SimpleStorage.bin",
+    "utf8"
+  );
+
+  const contractFactory = new ethers.ContractFactory(abi, binary, wallet);
+  console.log("Deploying the contract..");
+  const contract = await contractFactory.deploy();
+  await contract.deployTransaction.wait(1);
+  // Get Number
+  const number = await contract.retrieve("Jatt");
+  console.log(`The old number is ${number}`);
+  const txnResponse = await contract.store("Jatt", 98);
+  await txnResponse.wait(1);
+  const newNumber = await contract.retrieve("Jatt");
+  console.log(`The new number is ${newNumber}`);
 }
 
 main()
